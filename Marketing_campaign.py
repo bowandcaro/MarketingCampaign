@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+from scipy import stats
 
 
 #Explore Dataset
@@ -41,7 +42,7 @@ print('columns after edits')
 print(df.columns)
 
 ##Visualizations
-#Customer Profile
+#Customer Profiling - who are the customers? 
 
 #Marital Status just using pandas histogram
 df['Marital_Status'].hist()
@@ -62,13 +63,8 @@ plt.show()
 print(df[df['Age'] >100])
 #create a binned age column
 df['Ages'] = pd.cut(x=df['Age'], bins=[10, 19, 29, 39, 49, 59, 69, 79, 89, 99, 109, 119, 129], labels = ['10s','20s', '30s', '40s', '50s', '60s', '70s', '80s', '90s', '100s', '110s', '120s']) 
-plt.hist(df['Ages'])
-plt.xlabel('Age (years)')
-plt.ylabel('# of Observations')
-plt.title('Customer Ages')
-plt.show()
 
-#Education
+#Education using seaborn histogram
 sns.histplot(df['Education'], color='g')
 plt.xticks(rotation=45)
 plt.show()
@@ -111,7 +107,6 @@ ax1[1,0].set_ylabel('Dollars Spent')
 ax1[1,0].set_xlabel('Number of Kids')
 plt.subplots_adjust( hspace=1.1)
 plt.show()
-
 #average
 sns.catplot(x='Education', y='Spent', data=df, kind='bar')
 plt.xticks(rotation=45)
@@ -123,11 +118,35 @@ sns.catplot(x='Children_Home', y='Spent', data=df, kind='bar')
 plt.xticks(rotation=45)
 plt.show()
 
+#Does income correlate to how much a customer spends
+sns.scatterplot(x='Income',y='Spent',color='g',data=df)
+plt.show()
+#let's find the trend 
+sns.lmplot(x='Income',y='Spent', data=df, truncate=True)
+plt.show()
+#remove outliers
+q_low = df["Income"].quantile(0.01)
+q_hi  = df["Income"].quantile(0.99)
+df_filtered = df[(df["Income"] < q_hi) & (df["Income"] > q_low)]
+sns.lmplot(x='Income',y='Spent', data=df_filtered, truncate=True, logistic=True)
+plt.show()
+#log regression looks like it would fit better so lets try ski-kit learn
+
+
 #Web vs Catalog vs Store vs web purchase. Where are people buying the merch?
 Purchases_location = [df['Web_Purchases'].sum(), df['Catalog_Purchases'].sum(), df['Store_Purchases'].sum()]
 Purchases_loc_columns = ['Web Purchases','Catalog Purchases','Store Purchases']
 plt.bar(Purchases_loc_columns, Purchases_location)
 plt.xlabel('Purchase Location')
+plt.ylabel('Number of Purchases')
+plt.show()
+
+
+#Which products are being bought?
+Products_bought = [df['Fish'].sum(), df['Wine'].sum(), df['Meat'].sum(), df['Sweets'].sum(), df['Gold'].sum(), df['Fruit'].sum()]
+Product_name_columns = ['Fish','Wine','Meat', 'Sweets', 'Gold', 'Fruit']
+plt.bar(Product_name_columns, Products_bought)
+plt.xlabel('Products')
 plt.ylabel('Number of Purchases')
 plt.show()
 
@@ -139,6 +158,7 @@ plt.xlabel('Products')
 plt.ylabel('Number of Purchases')
 plt.show()
 
+
 #Did the campaigns work? if so which ones?
 Promotion_Totals = [df['First_Promotion'].sum(), df['Second_Promotion'].sum(), df['Third_Promotion'].sum(), df['Fourth_Promotion'].sum(), df['Fifth_Promotion'].sum(), df['Last_Promotion'].sum()]
 Promotion_name_columns = ['First', 'Second', 'Third', 'Fourth', 'Fifth', 'Last']
@@ -147,6 +167,7 @@ plt.xticks(rotation=45)
 plt.xlabel('Promotion')
 plt.ylabel('Number of Purchases')
 plt.show()
+
 
 #does WebVisits_perMonth correlate to the #purchases
 sns.regplot(x='WebVisits_perMonth', y='Web_Purchases', data=df)
@@ -179,7 +200,9 @@ plt.ylabel('Number of Complaints')
 plt.show()
 print(Complaints)
 
+
+df_corr = df[['Fish','Wine','Meat', 'Sweets', 'Gold', 'Fruit','Age', 'Education', 'Marital_Status', 'Children_Home', 'Income','Complain']]
+corr = df_corr.corr()
+sns.heatmap(corr)
 corr = df.corr()
 sns.heatmap(corr)
-
-
